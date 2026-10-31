@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>로비 인수인계 점검표</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout concept: one long ruled sheet, like the printed form. Shift columns stay pinned while the list scrolls. */
+:root {
+  --bg: #f1f4f7; --surface: #ffffff; --ink: #14202b; --muted: #587084; --line: #d2dce5; --line-strong: #98aebf;
+  --accent: #1d5fa8; --accent-ink: #ffffff; --head: #e3eaf1; --sec: #edf2f6;
+  --ok-bg: #d3efe1; --ok-fg: #0b5a37; --bad-bg: #fad8d4; --bad-fg: #9a1d16;
+  --ord-bg: #fde6bd; --ord-fg: #774600; --chk-bg: #dde3fa; --chk-fg: #2a3d92;
+  --bar: #188056; --bar-bg: #d3dde6; --danger: #b3261e;
+  --font: "Noto Sans KR", system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --cw: 70px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e141a; --surface: #161f28; --ink: #e5ecf2; --muted: #9db0c0; --line: #2a3947; --line-strong: #4b6276;
+    --accent: #72aeea; --accent-ink: #0a1620; --head: #1e2b37; --sec: #1a2530;
+    --ok-bg: #12402d; --ok-fg: #92e3bb; --bad-bg: #4b1d1a; --bad-fg: #ffb6b0;
+    --ord-bg: #4a3411; --ord-fg: #ffd68d; --chk-bg: #232a50; --chk-fg: #bcc7ff;
+    --bar: #4cc592; --bar-bg: #2a3947; --danger: #ff8a80; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e141a; --surface: #161f28; --ink: #e5ecf2; --muted: #9db0c0; --line: #2a3947; --line-strong: #4b6276;
+  --accent: #72aeea; --accent-ink: #0a1620; --head: #1e2b37; --sec: #1a2530;
+  --ok-bg: #12402d; --ok-fg: #92e3bb; --bad-bg: #4b1d1a; --bad-fg: #ffb6b0;
+  --ord-bg: #4a3411; --ord-fg: #ffd68d; --chk-bg: #232a50; --chk-fg: #bcc7ff;
+  --bar: #4cc592; --bar-bg: #2a3947; --danger: #ff8a80; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg); color: var(--ink); font: 14px/1.5 var(--font);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 18px 56px;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 780px; margin: 0 auto; display: grid; gap: 14px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* top */
+.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { margin: 0; font-size: 22px; line-height: 1.25; font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
+.sub { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+.tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.badge { font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--muted); background: var(--surface); white-space: nowrap; }
+.badge[data-k="shared"] { color: var(--ok-fg); border-color: var(--ok-fg); }
+.badge[data-k="err"], .badge[data-k="ro"] { color: var(--bad-fg); border-color: var(--bad-fg); }
+.btn { border: 1px solid var(--line-strong); background: var(--surface); border-radius: 8px; padding: 6px 12px; cursor: pointer; min-height: 34px; }
+.btn:hover { border-color: var(--accent); }
+.btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.mini { border: 1px solid var(--line-strong); background: var(--surface); border-radius: 6px; padding: 3px 9px; cursor: pointer; font-size: 12.5px; }
+.mini.danger { color: var(--danger); border-color: var(--danger); }
+.mini[data-armed="1"] { background: var(--danger); color: #fff; }
+
+/* tabs + period */
+.bar { display: grid; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: var(--head); padding: 4px; border-radius: 10px; }
+.tab { border: 0; background: transparent; padding: 8px 6px; border-radius: 7px; cursor: pointer; font-weight: 500; }
+.tab[aria-selected="true"] { background: var(--surface); box-shadow: 0 1px 2px rgba(0,0,0,.18); font-weight: 700; }
+.period { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.period label { font-weight: 700; margin-right: 2px; }
+.dow { font-size: 15px; padding: 3px 10px; border-radius: 999px; background: var(--head); white-space: nowrap; }
+.dow[data-d="6"] { color: var(--accent); }
+.dow[data-d="0"] { color: var(--danger); }
+.period input, .period select { border: 1px solid var(--line-strong); background: var(--surface); border-radius: 8px; padding: 6px 8px; min-height: 36px; }
+.overall { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; }
+.overall .big { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+.overall .lab { font-size: 12px; color: var(--muted); }
+.meter, .pbar { display: block; height: 7px; border-radius: 4px; background: var(--bar-bg); overflow: hidden; }
+.meter i, .pbar i { display: block; height: 100%; width: 0; background: var(--bar); transition: width .25s; }
+.cnt { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* grid */
+.sheet { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: clip; }
+table.grid { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+.grid th, .grid td { border-bottom: 1px solid var(--line); padding: 0; text-align: left; font-weight: 400; }
+.grid td + td, .grid th + th, .grid th + td { border-left: 1px solid var(--line); }
+.grid thead th { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--head); padding: 7px 4px 8px; text-align: center; border-bottom: 1px solid var(--line-strong); }
+.grid thead th.corner { text-align: left; padding-left: 12px; font-size: 12.5px; color: var(--muted); font-weight: 500; }
+.grid thead tr.pr th, .grid thead tr.hr th { padding: 5px 4px 6px; border-top: 1px solid var(--line); }
+.cl { display: block; font-size: 16px; line-height: 1.2; }
+.hrs { display: block; font-size: 10.5px; color: var(--muted); line-height: 1.25; min-height: 13px; }
+.pct { display: block; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; margin: 2px 0 3px; }
+.pbar { margin: 0 6px; height: 5px; }
+col.cc { width: var(--cw); }
+tr.sec th { background: var(--sec); padding: 8px 12px; font-weight: 700; font-size: 13.5px; border-top: 1px solid var(--line-strong); }
+th.item { padding: 8px 10px 8px 12px; line-height: 1.4; }
+th.item .n { display: inline-block; min-width: 2.4em; color: var(--muted); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+tr.who-row th { padding: 6px 12px; font-size: 12.5px; color: var(--muted); font-weight: 500; background: var(--sec); }
+tr.who-row td { background: var(--sec); }
+body.weekly .who, body.monthly .who { min-height: 72px; padding: 10px 3px; }
+.who { display: block; resize: none; font-family: inherit; line-height: 1.3; overflow: hidden; width: 100%; border: 0; background: transparent; text-align: center; padding: 8px 2px; font-size: 12.5px; min-height: 40px; }
+.who::placeholder { color: var(--muted); opacity: .6; }
+td.mkc { padding: 0; }
+select.mk {
+  appearance: none; -webkit-appearance: none; display: block; width: 100%; min-height: 42px; border: 0; border-radius: 0; margin: 0;
+  background: transparent; text-align: center; text-align-last: center; font-weight: 700; font-size: 15px; cursor: pointer; padding: 0;
+}
+select.mk[data-v=""] { color: var(--line-strong); font-weight: 400; }
+select.mk[data-v="☑"] { background: var(--ok-bg); color: var(--ok-fg); }
+select.mk[data-v="X"] { background: var(--bad-bg); color: var(--bad-fg); }
+select.mk[data-v="P"] { background: var(--ord-bg); color: var(--ord-fg); }
+select.mk[data-v="C"] { background: var(--chk-bg); color: var(--chk-fg); }
+select:disabled, input:disabled { cursor: default; opacity: 1; -webkit-text-fill-color: currentColor; }
+select.mk:focus-visible, .who:focus-visible { outline-offset: -2px; }
+
+.lg { float: right; display: inline-flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; margin-left: 8px; }
+.lc { font-style: normal; font-weight: 500; font-size: 11px; line-height: 1; padding: 3px 6px; border-radius: 5px; background: var(--surface); color: var(--ink); display: inline-flex; gap: 3px; align-items: center; }
+.lc b { font-weight: 700; padding: 1px 4px; border-radius: 3px; }
+.lc[data-m="☑"] b { background: var(--ok-bg); color: var(--ok-fg); }
+.lc[data-m="X"] b { background: var(--bad-bg); color: var(--bad-fg); }
+.lc[data-m="P"] b { background: var(--ord-bg); color: var(--ord-fg); }
+.lc[data-m="C"] b { background: var(--chk-bg); color: var(--chk-fg); }
+/* edit mode */
+.ed { display: none; }
+body.edit .ed { display: revert; }
+body.edit .view { display: none; }
+body.edit .itedit, body.edit .secedit { display: flex; align-items: center; gap: 6px; }
+.itedit input, .secedit input, input.hrsin { flex: 1; min-width: 0; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); padding: 4px 6px; }
+input.hrsin { width: 100%; font-size: 13px; padding: 5px 2px; text-align: center; min-height: 32px; }
+body.edit .hrsedit { display: grid; gap: 4px; padding: 0 4px; }
+.hrs { font-size: 12.5px; font-weight: 500; color: var(--ink); }
+tr.addrow td { padding: 6px 12px; background: var(--surface); }
+
+/* notes + roster */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 8px; }
+.card h2 { margin: 0; font-size: 14.5px; }
+.card .hint { margin: 0; color: var(--muted); font-size: 12.5px; }
+.note { display: grid; grid-template-columns: 2.4em 1fr; align-items: center; gap: 6px; }
+.note span { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.note input, textarea.rost { width: 100%; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 8px; padding: 8px 10px; min-height: 40px; }
+textarea.rost { min-height: 150px; resize: vertical; line-height: 1.5; }
+.toast { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 13px; z-index: 20; max-width: calc(100% - 32px); }
+[hidden] { display: none !important; }
+
+@media (max-width: 480px) {
+  :root { --cw: 62px; }
+  body.weekly { --cw: 52px; } body.monthly { --cw: 45px; }
+  h1 { font-size: 20px; }
+  th.item { padding-left: 8px; font-size: 13px; }
+  th.item .n { min-width: 2.1em; }
+}
+body.weekly { --cw: 62px; } body.monthly { --cw: 54px; }
+@media (max-width: 480px) {
+  body.daily { --cw: 54px; } body.weekly { --cw: 46px; } body.monthly { --cw: 40px; }
+  body { font-size: 13.5px; padding-top: 12px; }
+  .wrap { gap: 10px; }
+  .bar { padding: 10px; gap: 10px; }
+  .tab { font-size: 13px; padding: 8px 2px; }
+  .overall .big { font-size: 22px; }
+  th.item { padding: 7px 6px 7px 8px; font-size: 12.5px; line-height: 1.35; word-break: keep-all; overflow-wrap: anywhere; }
+  th.item .n { display: block; min-width: 0; }
+  tr.sec th { padding: 7px 8px; font-size: 13px; }
+  .lg { float: none; display: flex; justify-content: flex-start; margin: 0 0 5px; }
+  .grid thead th.corner { padding-left: 8px; font-size: 11.5px; }
+  .cl { font-size: 15px; }
+  .hrs { font-size: 11.5px; }
+  .pct { font-size: 11.5px; }
+  .pbar { margin: 0 4px; }
+  select.mk { font-size: 14px; }
+  .who { font-size: 11.5px; padding: 8px 0; }
+  input.hrsin { font-size: 12px; padding: 5px 0; }
+  body.edit .hrsedit { padding: 0 2px; }
+  .itedit, .secedit { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) { .meter i, .pbar i { transition: none; } }
+body{margin:0}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>로비 인수인계 점검표</h1>
+      <p class="sub">근무조별로 확인하고, 달성률을 한눈에 봅니다.</p>
+    </div>
+    <div class="tools">
+      <span class="badge" id="status" data-k="local">이 기기에만 저장</span>
+      <button class="btn" id="editBtn" aria-pressed="false">항목 편집</button>
+    </div>
+  </header>
+
+  <section class="bar" aria-label="점검 종류와 기간">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="daily" aria-selected="true">일일 인수인계</button>
+      <button class="tab" role="tab" data-tab="weekly" aria-selected="false">주간 점검</button>
+      <button class="tab" role="tab" data-tab="monthly" aria-selected="false">월간 점검</button>
+    </div>
+    <div class="period">
+      <label id="pLabel" for="pDate">날짜</label>
+      <span class="pk" data-for="daily">
+        <button class="btn" id="dayPrev" aria-label="전날">◀</button>
+        <input type="date" id="pDate">
+        <button class="btn" id="dayNext" aria-label="다음날">▶</button>
+        <button class="btn" id="dayToday">오늘</button>
+        <b class="dow" id="dow"></b>
+      </span>
+      <span class="pk" data-for="weekly"><input type="month" id="pMonth" aria-label="점검 연월"></span>
+      <span class="pk" data-for="monthly"><select id="pYear" aria-label="점검 연도"></select></span>
+    </div>
+    <div class="overall">
+      <div><div class="lab">전체 달성률</div><div class="big" id="ovPct">0%</div></div>
+      <span class="meter"><i id="ovBar"></i></span>
+      <span class="cnt" id="ovCnt">0 / 0</span>
+    </div>
+  </section>
+
+  <div class="sheet"><table class="grid" id="grid"></table></div>
+
+  <section class="card" id="notesCard" hidden>
+    <h2>기타 특이사항 기록</h2>
+    <div class="note"><span>메모1</span><input class="nin" data-n="1" aria-label="특이사항 1"></div>
+    <div class="note"><span>메모2</span><input class="nin" data-n="2" aria-label="특이사항 2"></div>
+    <div class="note"><span>메모3</span><input class="nin" data-n="3" aria-label="특이사항 3"></div>
+  </section>
+
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+  const MARKS = ['☑', 'X', 'P', 'C'];
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const stable = (o) => JSON.stringify(o, (k, v) => (v && typeof v === 'object' && !Array.isArray(v)) ? Object.keys(v).sort().reduce((a, x) => (a[x] = v[x], a), {}) : v);
+  const pad = (n) => String(n).padStart(2, '0');
+  const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const uid = () => 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+
+  /* ---------- default checklist (editable on the page) ---------- */
+  const sec = (id, no, name, items) => ({ id, no, name, items: items.map((t, i) => ({ id: `${id}-${i + 1}`, t })) });
+  const DEFAULT = {
+    shifts: { D: '07:00~16:00', H: '09:00~18:00', N: '13:30~22:30', T: '22:30~07:30' },
+    daily: [
+      sec('d1', '1', '분실물 처리 (L/F = Lost & Found)', [
+        '신규 습득물 접수대장 기록 완료', '보관 중인 분실물 위치·번호표 일치 확인',
+        'L/F(분실물) 보관품 최소화 → HK(객실관리팀) 인계', '고객 문의·인수 요청 건 확인']),
+      sec('d2', '2', '대여품 관리', [
+        '우산 대여·반납 수량 확인', '우산보관함 정리', '휴대폰 충전기 수량 및 충전상태', '휴대폰 충전기 정리 (고객 충전서비스용)',
+        '신&본관 태블릿 충전상태', '딜라이브 수량·내용 확인 (회수 기준)', '휠체어 상태 및 위치 (타이어 바람)',
+        '유모차 대여 및 재고확인', '유모차 세척·청결상태 확인 및 세탁', '미반납 대여품 다음 근무자에게 인계']),
+      sec('d3', '3', '베기지룸 정리 (수하물 보관실)', [
+        '보관 짐 수량과 Baggage Tag 번호 대조', '장기 보관 짐 확인 및 인계', 'Bell C-Cart(짐수레) 수량 (본관 1~2 / 신관 3~4)',
+        '룸 내 통로 정리 및 시건(잠금) 확인', 'Baggage Tag(수하물 표) 재고 확인']),
+      sec('d4', '4', '기타 특이사항', [
+        '개인 소지품 지정 위치 보관', '개인 음료·텀블러 정리', '선반에 불필요한 물품 적재 금지', '제약사 관련 물품 확보·정리',
+        'Laundry Bag(세탁물 봉투) 재고 (HK에서 수령)', '사무용품 재고 (볼펜·테이프·네임펜 등)', 'Guide Line 재고관리',
+        'HK Amenity(면도기, 비누, 반지고리, 유아용 목욕용품 기타) 재고관리']),
+    ],
+    weekly: [
+      sec('w2', '1', '대여품 관리', ['휠체어 관리 (타이어 바람 확인)', '휴대폰 충전기 수령·정리 (HK)']),
+      sec('w4', '2', '기타 특이사항', ['정수기 주변 청소 (물받침대 세척)', '냉장고 청소 (신관·본관·신관창고)', '데스크 서랍장 정리',
+        '의약품·연고케이스 재고', '여성용품 재고', 'Key Cover(키 케이스) 재고']),
+    ],
+    monthly: [
+      sec('m2', '1', '대여품 관리', ['고객 대여 우산 재고 확인', '우산대여장부 폐기 및 복사']),
+      sec('m3', '2', '베기지룸 정리 (수하물 보관실)', ['Baggage Tag(수하물 표) 재고', '쇼핑백 재고']),
+      sec('m4', '3', '기타 특이사항', ['기간 종료 안내문 폐기', '여성용품 PR 신청 (PR = 구매요청서)', 'Guide Line(안내서) 수량', 'FROM~TO 관리대장 정리']),
+    ],
+  };
+  const normalize = (d) => {
+    const c = clone(DEFAULT);
+    if (!d) return c;
+    ['daily', 'weekly', 'monthly'].forEach((k) => { if (Array.isArray(d[k])) c[k] = clone(d[k]); });
+    if (d.shifts && typeof d.shifts === 'object') c.shifts = { ...c.shifts, ...d.shifts };
+    return c;
+  };
+  const COLS = {
+    daily: ['D', 'H', 'N', 'T'].map((k) => ({ k, label: k })),
+    weekly: [1, 2, 3, 4, 5].map((k) => ({ k: String(k), label: `${k}주` })),
+    monthly: [2, 4, 6, 8, 10, 12].map((k) => ({ k: String(k), label: `${k}월` })),
+  };
+
+  /* ---------- state ---------- */
+  const t0 = new Date();
+  const S = { tab: 'daily', date: ymd(t0), month: ymd(t0).slice(0, 7), year: String(t0.getFullYear()),
+    cfg: clone(DEFAULT), roster: [], rec: {}, canWrite: true, edit: false, subs: [] };
+
+  /* ---------- storage: shared db when granted, otherwise this browser ---------- */
+  const deepMerge = (a, b) => {
+    const o = { ...(a || {}) };
+    for (const k of Object.keys(b)) o[k] = (b[k] && typeof b[k] === 'object' && !Array.isArray(b[k])) ? deepMerge(o[k], b[k]) : b[k];
+    return o;
+  };
+  const local = {
+    docs: {}, subs: {},
+    load() { try { this.docs = JSON.parse(localStorage.getItem('lobby-checklist-v1') || '{}'); } catch (e) { this.docs = {}; } },
+    persist() { try { localStorage.setItem('lobby-checklist-v1', JSON.stringify(this.docs)); } catch (e) { /* storage blocked: stay in memory */ } },
+    emit(p) { (this.subs[p] || []).forEach((f) => f(this.docs[p] ?? null)); },
+    sub(p, cb) {
+      (this.subs[p] = this.subs[p] || []).push(cb);
+      setTimeout(() => cb(this.docs[p] ?? null), 0);
+      return () => { this.subs[p] = this.subs[p].filter((f) => f !== cb); };
+    },
+    patch(p, d) { this.docs[p] = deepMerge(this.docs[p], clone(d)); this.persist(); this.emit(p); return Promise.resolve(); },
+    put(p, d) { this.docs[p] = clone(d); this.persist(); this.emit(p); return Promise.resolve(); },
+  };
+  local.load();
+  const chain = new Map();
+  const queued = (p, fn) => { const next = (chain.get(p) || Promise.resolve()).catch(() => {}).then(fn); chain.set(p, next); return next; };
+  const store = {
+    db: null,
+    sub(p, cb) {
+      if (!this.db) return local.sub(p, cb);
+      return this.db.doc(p).onSnapshot((s) => cb(s.exists ? s.data() : null), (e) => setStatus('err'));
+    },
+    patch(p, d) {
+      if (!this.db) return local.patch(p, d);
+      const ref = this.db.doc(p);
+      return queued(p, async () => { try { await ref.update(d); } catch (e) { if (e && e.code === 'invalid_argument') await ref.set(d); else throw e; } });
+    },
+    put(p, d) { return this.db ? queued(p, () => this.db.doc(p).set(d)) : local.put(p, d); },
+  };
+  const write = (fn) => {
+    Promise.resolve().then(fn).then(() => setStatus(store.db ? 'shared' : 'local')).catch((e) => {
+      if (e && e.code === 'invalid_argument') { S.canWrite = false; renderGrid(); setStatus('ro'); toast('이 문서는 읽기만 가능해요.'); }
+      else { setStatus('err'); toast('저장하지 못했어요. 잠시 후 다시 시도해 주세요.'); }
+    });
+  };
+
+  /* ---------- helpers ---------- */
+  let toastT;
+  const toast = (m) => { const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 3200); };
+  const STATUS = { local: '이 기기에만 저장', shared: '함께 쓰는 문서 · 자동 저장', ro: '읽기 전용', err: '저장 실패' };
+  const setStatus = (k) => { const b = $('#status'); b.dataset.k = k; b.textContent = STATUS[k]; };
+  const recPath = () => 'rec/' + S.tab + '-' + (S.tab === 'daily' ? S.date : S.tab === 'weekly' ? S.month : S.year);
+  const grid = $('#grid');
+  const items = () => S.cfg[S.tab].flatMap((s) => s.items);
+
+  /* ---------- rendering ---------- */
+  function renderControls() {
+    document.body.classList.remove('daily', 'weekly', 'monthly');
+    document.body.classList.add(S.tab);
+    document.querySelectorAll('.tab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === S.tab)));
+    document.querySelectorAll('.pk').forEach((p) => { p.hidden = p.dataset.for !== S.tab; });
+    $('#pLabel').textContent = S.tab === 'daily' ? '날짜' : S.tab === 'weekly' ? '점검 연월' : '점검 연도';
+    $('#pDate').value = S.date; $('#pMonth').value = S.month;
+    const [yy, mm, dd] = S.date.split('-').map(Number), dt = new Date(yy, mm - 1, dd), dw = $('#dow');
+    dw.dataset.d = dt.getDay();
+    dw.textContent = `${mm}월 ${dd}일 (${'일월화수목금토'[dt.getDay()]})` + (S.date === ymd(new Date()) ? ' · 오늘' : '');
+    const ys = $('#pYear');
+    if (!ys.options.length) for (let y = 2025; y <= 2035; y++) ys.add(new Option(y + '년', String(y)));
+    ys.value = S.year;
+    $('#notesCard').hidden = false;
+  }
+
+  const hrsHtml = (v) => { const [a, b] = String(v || '').split('~'); return b === undefined ? esc(a) : `${esc(a)}<br>~${esc(b)}`; };
+  const LEGEND = [['☑', '확인'], ['X', '불량'], ['P', '발주'], ['C', '재확인']].map(([m, t]) => `<i class="lc" data-m="${m}"><b>${m}</b>${t}</i>`).join('');
+  function renderGrid() {
+    const cols = COLS[S.tab], secs = S.cfg[S.tab], ro = !S.canWrite, daily = S.tab === 'daily';
+    const opts = '<option value="">–</option>' + MARKS.map((m) => `<option value="${m}">${m}</option>`).join('');
+    let h = '<colgroup><col>' + cols.map(() => '<col class="cc">').join('') + '</colgroup>';
+    h += `<thead><tr><th class="corner">${daily ? '근무조' : S.tab === 'weekly' ? '주차' : '월'}</th>` + cols.map((c) => {
+      const hrs = daily ? (S.cfg.shifts[c.k] || '') : '';
+      return `<th scope="col"><b class="cl">${esc(c.label)}</b>` + (daily
+        ? `<span class="hrs view" data-col="${c.k}">${hrsHtml(hrs)}</span><span class="ed hrsedit"><input class="hrsin" data-f="shift" data-col="${c.k}" value="${esc(hrs.split('~')[0] || '')}" placeholder="시작" aria-label="${c.k}조 시작 시간"><input class="hrsin" data-f="shift" data-col="${c.k}" value="${esc(hrs.split('~')[1] || '')}" placeholder="끝" aria-label="${c.k}조 끝 시간"></span>` : '') +
+        `</th>`;
+    }).join('') + '</tr><tr class="pr"><th class="corner" scope="row">달성률</th>' + cols.map((c) =>
+      `<th scope="col"><span class="pct" data-col="${c.k}">0%</span><span class="pbar"><i data-col="${c.k}"></i></span></th>`).join('') + '</tr></thead><tbody>';
+    h += `<tr class="who-row"><th scope="row">${daily ? '담당자' : '점검자'}</th>` + cols.map((c) =>
+      `<td><textarea class="who" rows="${daily ? 1 : 3}" data-col="${c.k}" placeholder="이름" autocomplete="off" aria-label="${esc(c.label)} ${daily ? '담당자' : '점검자'}" ${ro ? 'disabled' : ''}></textarea></td>`).join('') + '</tr>';
+    secs.forEach((s, si) => {
+      h += `<tr class="sec"><th colspan="${cols.length + 1}" scope="colgroup"><span class="view lg">${LEGEND}</span><span class="view sn" data-s="${si}">${esc(s.no)}. ${esc(s.name)}</span>` +
+        `<span class="ed secedit"><b>${esc(s.no)}.</b><input data-f="secname" data-s="${si}" value="${esc(s.name)}" aria-label="분류 이름"><button class="mini danger" data-act="del-sec" data-s="${si}">분류 삭제</button></span></th></tr>`;
+      s.items.forEach((it, ii) => {
+        h += `<tr><th class="item" scope="row"><span class="n">${esc(s.no)}-${ii + 1}</span><span class="view t" data-i="${it.id}">${esc(it.t)}</span>` +
+          `<span class="ed itedit"><input data-f="item" data-s="${si}" data-ii="${ii}" data-id="${it.id}" value="${esc(it.t)}" aria-label="점검 항목 이름"><button class="mini danger" data-act="del-item" data-s="${si}" data-ii="${ii}">삭제</button></span></th>` +
+          cols.map((c) => `<td class="mkc"><select class="mk" data-id="${it.id}" data-col="${c.k}" data-v="" aria-label="${esc(s.no)}-${ii + 1} ${esc(c.label)}" ${ro ? 'disabled' : ''}>${opts}</select></td>`).join('') + '</tr>';
+      });
+      h += `<tr class="addrow ed"><td colspan="${cols.length + 1}"><button class="mini" data-act="add-item" data-s="${si}">+ 항목 추가</button></td></tr>`;
+    });
+    h += `<tr class="addrow ed"><td colspan="${cols.length + 1}"><button class="mini" data-act="add-sec">+ 분류 추가</button></td></tr></tbody>`;
+    grid.innerHTML = h;
+    const head = grid.querySelector('thead'), r1 = head.rows[0], pr = head.querySelector('tr.pr');
+    if (daily) {
+      const hr = document.createElement('tr'); hr.className = 'hr';
+      const c0 = document.createElement('th'); c0.className = 'corner'; c0.scope = 'row'; c0.textContent = '근무시간'; hr.appendChild(c0);
+      [...r1.children].slice(1).forEach((th) => {
+        const n = document.createElement('th'); n.scope = 'col';
+        [...th.children].filter((x) => !x.classList.contains('cl')).forEach((x) => n.appendChild(x));
+        hr.appendChild(n);
+      });
+      head.insertBefore(hr, pr);
+    }
+    let topPx = r1.offsetHeight;
+    [...head.rows].slice(1).forEach((r) => {
+      r.querySelectorAll('th').forEach((t) => { t.style.top = `calc(env(safe-area-inset-top, 0px) + ${topPx}px)`; });
+      topPx += r.offsetHeight;
+    });
+    applyRecord();
+  }
+
+  function applyRecord() {
+    const m = S.rec.m || {}, p = S.rec.p || {}, n = S.rec.n || {};
+    grid.querySelectorAll('select.mk').forEach((sel) => {
+      const v = ((m[sel.dataset.id] || {})[sel.dataset.col]) || '';
+      if (sel.value !== v) sel.value = v;
+      sel.dataset.v = sel.value;
+    });
+    grid.querySelectorAll('.who').forEach((i) => { if (document.activeElement !== i) i.value = p[i.dataset.col] || ''; });
+    document.querySelectorAll('.nin').forEach((i) => { if (document.activeElement !== i) i.value = n[i.dataset.n] || ''; });
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const cols = COLS[S.tab], its = items(), m = S.rec.m || {};
+    let all = 0;
+    cols.forEach((c) => {
+      const done = its.filter((it) => ((m[it.id] || {})[c.k]) === '☑').length;
+      all += done;
+      const pct = its.length ? Math.round(done * 100 / its.length) : 0;
+      const pe = grid.querySelector(`.pct[data-col="${c.k}"]`), be = grid.querySelector(`.pbar i[data-col="${c.k}"]`);
+      if (pe) { pe.textContent = `${pct}%`; pe.title = `${done} / ${its.length}`; }
+      if (be) be.style.width = pct + '%';
+    });
+    const total = its.length * cols.length, pct = total ? Math.round(all * 100 / total) : 0;
+    $('#ovPct').textContent = pct + '%'; $('#ovBar').style.width = pct + '%'; $('#ovCnt').textContent = `${all} / ${total}`;
+  }
+
+  /* ---------- subscriptions ---------- */
+  function subscribeRecord() {
+    if (S.recUnsub) S.recUnsub();
+    S.rec = {};
+    S.recUnsub = store.sub(recPath(), (d) => { S.rec = d || {}; applyRecord(); });
+  }
+  function subscribeAll() {
+    S.subs.forEach((u) => u()); S.subs = [];
+    S.subs.push(store.sub('config/main', (d) => {
+      const next = normalize(d);
+      if (stable(next) === stable(S.cfg)) return;
+      const a = document.activeElement;
+      if (a && a.matches && a.matches('.hrsin, .itedit input, .secedit input')) return;
+      S.cfg = next; renderGrid();
+    }));
+    subscribeRecord();
+  }
+
+  /* ---------- editing ---------- */
+  let cfgT;
+  const saveCfg = (now) => { clearTimeout(cfgT); const go = () => write(() => store.put('config/main', clone(S.cfg))); now ? go() : (cfgT = setTimeout(go, 350)); };
+  const armed = new WeakMap();
+  const confirmTwice = (btn) => {
+    if (btn.dataset.armed === '1') { clearTimeout(armed.get(btn)); return true; }
+    btn.dataset.armed = '1'; btn.dataset.label = btn.textContent; btn.textContent = '한 번 더 누르면 삭제';
+    armed.set(btn, setTimeout(() => { btn.dataset.armed = ''; btn.textContent = btn.dataset.label; }, 3000));
+    return false;
+  };
+  const timers = {};
+  const later = (key, fn, ms = 500) => { clearTimeout(timers[key]); timers[key] = setTimeout(fn, ms); };
+
+  grid.addEventListener('change', (e) => {
+    const el = e.target;
+    if (el.matches('select.mk')) {
+      el.dataset.v = el.value;
+      const id = el.dataset.id, col = el.dataset.col, v = el.value;
+      S.rec = { ...S.rec, m: { ...(S.rec.m || {}), [id]: { ...((S.rec.m || {})[id] || {}), [col]: v } } };
+      updateProgress();
+      write(() => store.patch(recPath(), { m: { [id]: { [col]: v } } }));
+    } else if (el.matches('.who')) {
+      clearTimeout(timers['p' + el.dataset.col]);
+      write(() => store.patch(recPath(), { p: { [el.dataset.col]: el.value.trim() } }));
+    } else if (el.dataset.f === 'item') {
+      S.cfg[S.tab][+el.dataset.s].items[+el.dataset.ii].t = el.value;
+      const v = grid.querySelector(`.view.t[data-i="${el.dataset.id}"]`); if (v) v.textContent = el.value;
+      saveCfg();
+    } else if (el.dataset.f === 'secname') {
+      const s = S.cfg[S.tab][+el.dataset.s]; s.name = el.value;
+      const v = grid.querySelector(`.sn[data-s="${el.dataset.s}"]`); if (v) v.textContent = `${s.no}. ${el.value}`;
+      saveCfg();
+    } else if (el.dataset.f === 'shift') {
+      const ins = el.closest('th').querySelectorAll('input.hrsin');
+      const val = ins[0].value.trim() + (ins[1].value.trim() ? '~' + ins[1].value.trim() : '');
+      S.cfg.shifts[el.dataset.col] = val;
+      const v = grid.querySelector(`.hrs.view[data-col="${el.dataset.col}"]`); if (v) v.innerHTML = hrsHtml(val);
+      saveCfg();
+    }
+  });
+  grid.addEventListener('input', (e) => {
+    const el = e.target;
+    if (el.matches('.who')) later('p' + el.dataset.col, () => write(() => store.patch(recPath(), { p: { [el.dataset.col]: el.value.trim() } })));
+  });
+  grid.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-act]'); if (!b) return;
+    const act = b.dataset.act, secs = S.cfg[S.tab];
+    if (act === 'add-item') {
+      const s = secs[+b.dataset.s], id = uid(); s.items.push({ id, t: '새 점검 항목' });
+      renderGrid(); saveCfg(true);
+      const inp = grid.querySelector(`input[data-id="${id}"]`); if (inp) { inp.focus(); inp.select(); }
+    } else if (act === 'del-item') {
+      if (!confirmTwice(b)) return;
+      secs[+b.dataset.s].items.splice(+b.dataset.ii, 1); renderGrid(); saveCfg(true);
+    } else if (act === 'add-sec') {
+      const no = String(secs.reduce((m, s) => Math.max(m, parseInt(s.no, 10) || 0), 0) + 1);
+      secs.push({ id: uid(), no, name: '새 분류', items: [] }); renderGrid(); saveCfg(true);
+      const inp = grid.querySelector(`input[data-f="secname"][data-s="${secs.length - 1}"]`); if (inp) { inp.focus(); inp.select(); }
+    } else if (act === 'del-sec') {
+      if (!confirmTwice(b)) return;
+      secs.splice(+b.dataset.s, 1); renderGrid(); saveCfg(true);
+    }
+  });
+
+  document.querySelectorAll('.nin').forEach((i) => {
+    i.addEventListener('input', () => later('n' + i.dataset.n, () => write(() => store.patch(recPath(), { n: { [i.dataset.n]: i.value } }))));
+    i.addEventListener('change', () => { clearTimeout(timers['n' + i.dataset.n]); write(() => store.patch(recPath(), { n: { [i.dataset.n]: i.value } })); });
+  });
+
+  /* ---------- controls ---------- */
+  const goPeriod = () => { renderControls(); subscribeRecord(); applyRecord(); };
+  document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => { S.tab = b.dataset.tab; renderControls(); renderGrid(); subscribeRecord(); }));
+  $('#pDate').addEventListener('change', (e) => { if (e.target.value) { S.date = e.target.value; goPeriod(); } });
+  $('#pMonth').addEventListener('change', (e) => { if (e.target.value) { S.month = e.target.value; goPeriod(); } });
+  $('#pYear').addEventListener('change', (e) => { S.year = e.target.value; goPeriod(); });
+  const shiftDay = (n) => { const [y, m, d] = S.date.split('-').map(Number); S.date = ymd(new Date(y, m - 1, d + n)); goPeriod(); };
+  $('#dayPrev').addEventListener('click', () => shiftDay(-1));
+  $('#dayNext').addEventListener('click', () => shiftDay(1));
+  $('#dayToday').addEventListener('click', () => { S.date = ymd(new Date()); goPeriod(); });
+  $('#editBtn').addEventListener('click', (e) => {
+    S.edit = !S.edit; document.body.classList.toggle('edit', S.edit);
+    e.currentTarget.setAttribute('aria-pressed', String(S.edit)); e.currentTarget.textContent = S.edit ? '편집 끝내기' : '항목 편집';
+  });
+
+  grid.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.matches('.who')) { e.preventDefault(); e.target.blur(); } });
+
+  /* ---------- start: show the sheet at once, switch to the shared store when it answers ---------- */
+  renderControls(); renderGrid(); subscribeAll(); setStatus('local');
+  (async () => {
+    try {
+      const c = window.claude;
+      if (!c || !c.use) return;
+      const [db, user] = await Promise.all([c.use('db'), c.use('user')]);
+      if (user && user.can && user.can('data.write') === false) { S.canWrite = false; $('#editBtn').hidden = true; }
+      if (db) { store.db = db; subscribeAll(); setStatus(S.canWrite ? 'shared' : 'ro'); }
+      if (!S.canWrite) renderGrid();
+    } catch (e) { /* stay on this browser's storage */ }
+  })();
+})();
+</script>
+
+</body>
+</html>
